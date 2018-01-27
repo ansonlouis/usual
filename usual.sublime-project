@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "path": "./",
+      "folder_exclude_patterns": [
+        "node_modules",
+        "build"
+      ],
+      // "folder_exclude_patterns": [],
+      "file_exclude_patterns": [
+        "coins.sublime-workspace",
+        "​*.sublime-workspace",
+        "data/goals.json",
+        "package-lock.json"
+      ]
+    }
+  ]
+}
