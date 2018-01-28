@@ -4,13 +4,13 @@
   "description": "Very usual base model and collection for javascript",
   "main": "package/index.js",
   "scripts": {
-    "start:dev": "webpack-dev-server --hot --inline --open"
+    "start:dev": "webpack-dev-server --inline --open"
   },
   "author": "Anson Airoldi <ansonairoldi@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "eventemitter2": "^5.0.1",
-    "extend": "^3.0.1",
+    "extend": "^3.0.1"
   },
   "devDependencies" : {
     "html-webpack-plugin": "^2.30.1",

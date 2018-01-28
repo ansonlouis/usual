@@ -2,7 +2,7 @@
 
 console.log("index.js");
 
-var Base = import './base';
-var Cache = import './cache';
+var Model = import './Model';
+var Collection = import './collection';
 
-export { Base, Cache };
+export { Model, Collection };

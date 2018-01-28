@@ -44,12 +44,7 @@
         },
 
         plugins : [
-          new HtmlWebpackPlugin({
-            template : "test/index.html"
-          }),
-          new ScriptExtHtmlWebpackPlugin({
-            module: /\.js$/
-          })
+
         ],
 
         devServer : {

@@ -1,11 +1,11 @@
-// cache.js
+// collection.js
 
-import Base from "usual/base";
+import Model from "usual/model";
 const utils = require('./utils');
 const extend = require('extend');
 
 
-export default class Cache extends Base{
+export default class Collection extends Model{
 
   constructor(items, ...configs){
 
@@ -17,8 +17,8 @@ export default class Cache extends Base{
       items : []
     });
 
-    // empty (in case dev tried adding cache objects through
-    // the cache config prop)
+    // empty (in case dev tried adding items through
+    // the items config prop)
     this.empty();
 
     // add items properly sent through the items arg
@@ -28,7 +28,7 @@ export default class Cache extends Base{
 
   };
 
-  // allows iterating through the cache using for...of loop
+  // allows iterating through the models using for...of loop
   [Symbol.iterator]() {
     var index = 0;
     var data  = this.items;
@@ -134,10 +134,10 @@ export default class Cache extends Base{
     return undefined;
   };
 
-  remove(id){
+  remove(id, keepModel){
     var item = this.get(id);
     if(item !== undefined){
-      if(item instanceof Base){
+      if(!keepModel && item instanceof Model){
         item.destroy();
       }
       this._map[item.id] = undefined;
@@ -150,7 +150,7 @@ export default class Cache extends Base{
     if(data.id || useId){
       var item = this.get(useId || data.id);
       if(item){
-        if(item instanceof Base){
+        if(item instanceof Model){
           item.update(data);
         }
         else{

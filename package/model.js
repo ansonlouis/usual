@@ -3,9 +3,9 @@
 const utils = require('./utils');
 const extend = require('extend');
 const EventEmitter2 = require('eventemitter2');
+window.eventemitter2 = EventEmitter2;
 
-
-export default class Base{
+export default class Model{
 
   constructor(...modelAttrs /* attrObj1...cfgN, baseAttrs */){
 
@@ -19,8 +19,6 @@ export default class Base{
       idProperty  : null
        */
     };
-
-    this._parentCache = null;
 
     // merge modelAttrs arguments from last to first
     // ...last arg should be the base modelAttrs, and
@@ -40,10 +38,31 @@ export default class Base{
       this.id = this.generateModelId();
     }
 
+    // dont allow overriding of event emitter (just yet)
     this._events = new EventEmitter2(extend(true, {}, this.usual.eventConfig));
+    this._foreignListeners = [];
 
   };
 
+  /**
+   * Listens to another usual/model class while allowing the listener to be
+   * removed if this model happens to be destroyed before the listened-on model.
+   * Otherwise, the other model will keep firing the callback even if this
+   * model is destroyed.
+   */
+  listenTo(model, eventName, callback){
+    this._foreignListeners.push({
+      model : model,
+      eventName : eventName,
+      callback : callback
+    });
+    model.events.on(eventName, callback);
+  };
+
+  /**
+   * Simple getter for the internal EventEmitter2 instance, since we want to limit
+   * exposing set variables so toJSON() only returns model properties.
+   */
   get events(){
     return this._events;
   };
@@ -54,7 +73,19 @@ export default class Base{
    */
   destroy(){
     this.events.emit('destroy');
+    this.removeAllListeners();
+  };
+
+  /**
+   * Removes all local listeners as well as any listeners added to another model class
+   * using the listenTo() method.
+   */
+  removeAllListeners(){
     this.events.removeAllListeners();
+    this._foreignListeners.map(function(listener){
+      listener.model.events.off(listener.eventName, listener.callback);
+    }, this);
+    this._foreignListeners = [];
   };
 
   /**
@@ -88,16 +119,24 @@ export default class Base{
     return utils.uid('m-');
   };
 
-  getCache(){
-    return this._parentCache
+  /**
+   * If a model is an item inside of a collection, this will return the collection,
+   * otherwise it returns undefined
+   */
+  getCollection(){
+    return this._collection;
   };
 
-  removeFromCache(){
-    if(this._parentCache){
-      this._parentCache.remove(this.id);
-    }
-  };
-
+  /**
+   * Used to serialize the model. Initially just returns the properties passed in and
+   * added to it, removing any properties that start with an underscore (_prop) and the
+   * internal "usual" model config property.
+   *
+   * Override this for custom serialization. Usual/collections will run the toJSON method
+   * on all of its items when its own toJSON method is called. Also, keep in mind that when
+   * you run JSON.stringify on an object, its implementation will look for any toJSON method
+   * and use that for serialization instead of serializing it as a whole.
+   */
   toJSON(){
     var obj = utils.omit(this, function(value, key){
       return key[0] === '_' || key === "usual";

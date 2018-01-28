@@ -1,6 +1,3 @@
 .todo
 
-- try to implement event listening between models, so if the listening model gets destroyed, its listeners on the target model are removed
-- add test for sending custom eventConfig
-- add tests for the cache
-- rename cache
+- add tests for the collection

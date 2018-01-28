@@ -1,6 +1,6 @@
 // utils.js
 
-var utils = {
+const utils = {
   uid : function(prefix){
     return (prefix||"") + (Math.random() * Date.now()).toFixed(0);
   },
