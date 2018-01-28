@@ -3,14 +3,12 @@
     {
       "path": "./",
       "folder_exclude_patterns": [
-        "node_modules",
-        "build"
+        "node_modules"
       ],
       // "folder_exclude_patterns": [],
       "file_exclude_patterns": [
-        "coins.sublime-workspace",
+        "usual.sublime-workspace",
         "​*.sublime-workspace",
-        "data/goals.json",
         "package-lock.json"
       ]
     }
