@@ -1,8 +1,7 @@
 // index.js
 
-console.log("index.js");
+var Model = require('./Model');
+var Collection = require('./collection');
 
-var Model = import './Model';
-var Collection = import './collection';
-
-export { Model, Collection };
+exports.Model = Model;
+exports.Collection = Collection;

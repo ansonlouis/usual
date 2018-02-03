@@ -1,3 +1,5 @@
 .todo
 
 - add tests for the collection
+- research the update() implementation on collection
+- create option to force all passed in props to be a subobject property of the class, so that there will be no collisions with any default class properties or methods

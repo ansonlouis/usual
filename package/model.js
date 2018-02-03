@@ -3,11 +3,13 @@
 const utils = require('./utils');
 const extend = require('extend');
 const EventEmitter2 = require('eventemitter2');
-window.eventemitter2 = EventEmitter2;
 
-export default class Model{
+class Model{
 
   constructor(...modelAttrs /* attrObj1...cfgN, baseAttrs */){
+
+    // used for internal implementation purposes for tracking models
+    this._internalId = utils.uid('iid-');
 
     // usual config parameters
     this.usual = {
@@ -40,6 +42,9 @@ export default class Model{
 
     // dont allow overriding of event emitter (just yet)
     this._events = new EventEmitter2(extend(true, {}, this.usual.eventConfig));
+
+    // holds any foreign models that we are listening upon so we can keep track if
+    // us/them gets destroyed, listening events are removed as well
     this._foreignListeners = [];
 
   };
@@ -51,7 +56,15 @@ export default class Model{
    * model is destroyed.
    */
   listenTo(model, eventName, callback){
-    this._foreignListeners.push({
+    var _this = this;
+    if(!this._foreignListeners[model._internalId]){
+      this._foreignListeners[model._internalId] = [];
+      model.events.on('destroy', function(){
+        delete _this._foreignListeners[model._internalId];
+      });
+    }
+
+    this._foreignListeners[model._internalId].push({
       model : model,
       eventName : eventName,
       callback : callback
@@ -61,7 +74,7 @@ export default class Model{
 
   /**
    * Simple getter for the internal EventEmitter2 instance, since we want to limit
-   * exposing set variables so toJSON() only returns model properties.
+   * exposing explicitly set variables on the class so toJSON() only returns model properties.
    */
   get events(){
     return this._events;
@@ -82,10 +95,12 @@ export default class Model{
    */
   removeAllListeners(){
     this.events.removeAllListeners();
-    this._foreignListeners.map(function(listener){
-      listener.model.events.off(listener.eventName, listener.callback);
-    }, this);
-    this._foreignListeners = [];
+    for(var key in this._foreignListeners){
+      this._foreignListeners[key].map(function(listener){
+        listener.model.events.off(listener.eventName, listener.callback);
+      }, this);
+    }
+    this._foreignListeners = {};
   };
 
   /**
@@ -105,6 +120,7 @@ export default class Model{
   update(data){
     if(data){
       delete data['id'];
+      delete data['usual'];
     }
     this._merge(data);
     this.events.emit('update', data);
@@ -146,3 +162,5 @@ export default class Model{
 
 
 };
+
+module.exports = Model;

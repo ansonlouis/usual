@@ -208,13 +208,16 @@ describe('Base Model', function(){
     it("should be able to listen to another model's events", function(){
       let modelOne = new Model();
       let modelTwo = new Model();
+      let modelThree = new Model();
 
-      var ownCalled = 0;
+      let ownCalled = 0;
+      let twoCalled = 0;
+      let threeCalled = 0;
+
       modelOne.events.on('alert', function(){
         ownCalled++;
       });
 
-      var twoCalled = 0;
       modelTwo.listenTo(modelOne, 'alert', function(){
         twoCalled++;
       });
@@ -229,6 +232,21 @@ describe('Base Model', function(){
 
       assert.equal(ownCalled, 2);
       assert.equal(twoCalled, 1);
+
+      modelThree.listenTo(modelOne, 'alert', function(){
+        threeCalled++;
+      });
+
+      modelOne.events.emit('alert');
+
+      assert.equal(ownCalled, 3);
+      assert.equal(threeCalled, 1);
+
+      modelOne.destroy();
+      modelOne.events.emit('alert');
+
+      assert.equal(ownCalled, 3);
+      assert.equal(threeCalled, 1);
 
     });
 

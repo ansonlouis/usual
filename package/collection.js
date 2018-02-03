@@ -1,12 +1,17 @@
 // collection.js
 
-import Model from "usual/model";
+const Model = require("./model");
 const utils = require('./utils');
 const extend = require('extend');
 
 
-export default class Collection extends Model{
+class Collection extends Model{
 
+  /**
+   * Unlike the base usual/model, the collection first takes in an item or
+   * array of initial items, following by the normal prop object arguments,
+   * like the model.
+   */
   constructor(items, ...configs){
 
     // apply configs
@@ -47,15 +52,29 @@ export default class Collection extends Model{
     };
   };
 
+  /**
+   * Empties the collection, without calling any destroy() on the models
+   * or calling the 'remove' event
+   */
   empty(){
     this._map = {};
     this.items = [];
   };
 
+  /**
+   * The function to generate a unique ID for the collection's models if the
+   * models do not have ids or if the items in the collection are not instances
+   * of usual/models. Override to come up with your own id format.
+   */
   generateModelId(){
     return utils.uid("cid-");
   };
 
+  /**
+   * Returns the item in the collection at the passed index. You can pass in a negative
+   * number to return items from the end of the collection. For instance, -1 will return
+   * the last index, -2 the second to last, and so on.
+   */
   index(index){
     if(index < 0){
       return this.items[this.items.length + index] || undefined;
@@ -63,18 +82,49 @@ export default class Collection extends Model{
     return this.items[index] || undefined;
   };
 
+  /**
+   * Returns an array of the IDs of the collection's items
+   */
   ids(){
     return Object.keys(this._map);
   };
 
+  /**
+   * Shortcut to return the first item in the collection
+   */
   first(){
     return this.index(0);
   };
 
+  /**
+   * Shortcut to return the last item in the collection
+   */
   last(){
     return this.index(-1);
   };
 
+  /**
+   * The main function for adding items to the collection. You can pass one
+   * item or an array of items.
+   *
+   * If a passed item already exists in the collection (based on the item's id)
+   * then that model will be updated and not added. Keep in mind that means the
+   * model's 'update' event will fire.
+   *
+   * If the collection's 'model' property is set, added items will be instantiated
+   * as those models.
+   *
+   * If there is a sort method implemented on the collection, that will be called after
+   * the items are added.
+   *
+   * A 'add' event will be fired at the end of the function with the added models as
+   * the argument in the event callback. This array of added models will also contain
+   * any models that were not added, but updated.
+   *
+   * The return value of this function will be either a single item, if only one item
+   * was passed originally, or the array of all added items (included updated items)
+   * if multiple items were passed.
+   */
   add(objects){
 
     if(!(objects instanceof Array)){
@@ -123,7 +173,10 @@ export default class Collection extends Model{
 
   };
 
-
+  /**
+   * Returns the item from collection with the passed id. You can also pass an
+   * object and it will use its id.
+   */
   get(idOrObject){
     if(idOrObject !== undefined){
       if(typeof(idOrObject) === "object" && idOrObject.id){
@@ -134,6 +187,12 @@ export default class Collection extends Model{
     return undefined;
   };
 
+  /**
+   * Removes the item from the collection that matches the passed id. If the item
+   * is an instance of usual/model, its destroy method will be called. You can pass
+   * a truthy value for the second argument to not call destroy on the model. A 'remove'
+   * event will be fired after the item is removed.
+   */
   remove(id, keepModel){
     var item = this.get(id);
     if(item !== undefined){
@@ -146,9 +205,9 @@ export default class Collection extends Model{
     }
   };
 
-  update(data, useId){
-    if(data.id || useId){
-      var item = this.get(useId || data.id);
+  update(data){
+    if(data.id){
+      var item = this.get(data.id);
       if(item){
         if(item instanceof Model){
           item.update(data);
@@ -161,37 +220,35 @@ export default class Collection extends Model{
     }
     // if you got here, the item didnt have an id or the item did have
     // an id but did not match any existing item in the cache, add it
-    return this.add(data, useId);
+    return this.add(data);
 
   };
 
+  /**
+   * Returns the length of the collection
+   */
   get length(){
-    return Object.keys(this._map).length;
+    return this.items.length;
   };
 
-  forEach(callback, ctx){
-    for(var key in this._map){
-      var result = callback && callback.call(ctx || this, this._map[key], key, this._map);
-      if(result === false){
+  /**
+   * Loops through the collection's items. You can return false from the
+   * passed callback to exit early from the array.
+   */
+  forEach(callback, context){
+    let length = this.items.length;
+    for(let i=0; i<length; i++){
+      if(callback.call(context, this.items[i], i) === false){
         return;
       }
     }
   };
 
-  find(query){
-    var results = [];
-    var regex = new RegExp('^' + query, 'i');
-    this.forEach(function(item, id){
-      if(id === query){
-        results.unshift(item);
-      }
-      else if(regex.test(id)){
-        results.push(item);
-      }
-    });
-    return results;
-  };
-
+  /**
+   * Returns an array of matching items in the array that contain
+   * all of the same prop/values as the passed in test object. An
+   * empty array is returned if no items are matched.
+   */
   findByProperty(obj){
 
     var containsAll = function(item){
@@ -214,6 +271,10 @@ export default class Collection extends Model{
     return results;
   };
 
+  /**
+   * Same as findByProperty, but only returns the first result found,
+   * otherwise null is returned.
+   */
   getByProperty(obj){
     var items = this.findByProperty(obj);
     if(items.length){
@@ -222,6 +283,10 @@ export default class Collection extends Model{
     return null;
   };
 
+  /**
+   * Used for serializing the collection. All collection models will
+   * have their toJSON method called in the returned array.
+   */
   toJSON(){
     return this.items.map(function(item){
       if(item && item.toJSON){
@@ -231,14 +296,12 @@ export default class Collection extends Model{
     });
   };
 
-  filter(conditionFn){
-    var result = [];
-    this.forEach(function(item){
-      if(conditionFn.call(this, item)){
-        result.push(item);
-      }
-    });
-    return result;
+  /**
+   * Filters the collections items, however it does not modify the
+   * collection, but simply returns the filtered array.
+   */
+  filter(conditionFn, context){
+    return this.items.filter(conditionFn, context);
   };
 
   /*
@@ -253,3 +316,5 @@ export default class Collection extends Model{
    */
 
 };
+
+module.exports = Collection;
