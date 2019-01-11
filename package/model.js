@@ -37,7 +37,7 @@ class Model{
 
     // if no explicit id prop passed
     if(!this.id){
-      this.id = this.generateModelId();
+      this.id = this.generateId();
     }
 
     // dont allow overriding of event emitter (just yet)
@@ -131,7 +131,7 @@ class Model{
    * no id or valid idProperty property was passed in the original
    * modelAttrs. You can override to use your own method of ID creation.
    */
-  generateModelId(){
+  generateId(){
     return utils.uid('m-');
   };
 
@@ -141,6 +141,18 @@ class Model{
    */
   getCollection(){
     return this._collection;
+  };
+
+  trigger(...args){
+    return this._events.emit(...args);
+  };
+
+  on(...args){
+    return this._events.on(...args);
+  };
+
+  off(...args){
+    return this._events.off(...args);
   };
 
   /**
@@ -158,6 +170,10 @@ class Model{
       return key[0] === '_' || key === "usual";
     });
     return extend(true, {}, obj);
+  };
+
+  static isInstance(model){
+    return model instanceof Model;
   };
 
 

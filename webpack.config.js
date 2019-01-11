@@ -17,6 +17,8 @@
 
     module.exports = {
 
+        mode : 'development',
+
         entry : {
             "bundle" : paths.root + "test/test.js",
         },
