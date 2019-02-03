@@ -148,12 +148,17 @@ class Collection extends Model{
 
     let passedArray = true;
 
+    if(!objects){
+      return false;
+    }
+
     if(!Array.isArray(objects)){
       passedArray = false;
       objects = [objects];
     }
 
     var addedItems = [];
+    var updatedItems = [];
 
     objects.forEach((obj) => {
 
@@ -168,7 +173,7 @@ class Collection extends Model{
       let cachedObj = this.get(obj);
       if(cachedObj){
         this.update(obj);
-        addedItems.push(cachedObj);
+        updatedItems.push(cachedObj);
         return;
       }
 
@@ -187,6 +192,9 @@ class Collection extends Model{
 
         this.listenTo(obj, 'destroy', () => {
           this.remove(obj);
+        });
+        this.listenTo(obj, 'update', (changes) => {
+          this.events.emit('modelUpdate', obj, changes);
         });
       }
 
@@ -209,7 +217,7 @@ class Collection extends Model{
       this.items.sort(this.sorter);
     }
 
-    this.events.emit('add', addedItems);
+    this.events.emit('add', addedItems, updatedItems);
 
     // if an array of objects passed to `add`, lets return array of added items back
     if(passedArray){
@@ -272,7 +280,11 @@ class Collection extends Model{
     // if you got here, the item didnt have an id or the item did have
     // an id but did not match any existing item in the cache, add it
     return this.add(data);
+  };
 
+  reset(items){
+    this.empty();
+    this.add(items);
   };
 
   /**

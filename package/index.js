@@ -1,6 +1,6 @@
 // index.js
 
-var Model = require('./Model');
+var Model = require('./model');
 var Collection = require('./collection');
 
 exports.Model = Model;
