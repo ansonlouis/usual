@@ -158,7 +158,7 @@ class Collection extends Model{
     }
 
     var addedItems = [];
-    var updatedItems = [];
+    var newModels = [];
 
     objects.forEach((obj) => {
 
@@ -173,7 +173,7 @@ class Collection extends Model{
       let cachedObj = this.get(obj);
       if(cachedObj){
         this.update(obj);
-        updatedItems.push(cachedObj);
+        addedItems.push(cachedObj);
         return;
       }
 
@@ -207,6 +207,7 @@ class Collection extends Model{
       }
 
       addedItems.push(obj);
+      newModels.push(obj);
 
       this.items.push(obj);
       this._map[oid] = obj;
@@ -217,7 +218,7 @@ class Collection extends Model{
       this.items.sort(this.sorter);
     }
 
-    this.events.emit('add', addedItems, updatedItems);
+    this.events.emit('add', newModels);
 
     // if an array of objects passed to `add`, lets return array of added items back
     if(passedArray){
