@@ -2,7 +2,7 @@
 
 const Model = require("./model");
 const utils = require('./utils');
-const extend = require('extend');
+const mergeAndDiff = require('./merge-and-diff');
 
 
 class Collection extends Model{
@@ -19,6 +19,7 @@ class Collection extends Model{
       model : null,
       name  : null,
       _map  : {},
+      _childEvents : [],
       items : [],
       idProperty : 'id',
     });
@@ -28,6 +29,14 @@ class Collection extends Model{
     // empty (in case dev tried adding items through
     // the items config prop)
     this.empty();
+
+    this.onChildEvent('destroy', (obj) => {
+      this.remove(obj);
+    });
+    
+    this.onChildEvent('update', (obj, changes) => {
+      this.events.emit('modelUpdate', obj, changes);
+    });
 
     // add items properly sent through the items arg
     if(items){
@@ -190,12 +199,7 @@ class Collection extends Model{
           obj._collection = this;
         }
 
-        this.listenTo(obj, 'destroy', () => {
-          this.remove(obj);
-        });
-        this.listenTo(obj, 'update', (changes) => {
-          this.events.emit('modelUpdate', obj, changes);
-        });
+        this.addChildListeners(obj);
       }
 
       // use object's id if it's an instance of Base (must have id prop) or
@@ -273,7 +277,7 @@ class Collection extends Model{
           item.update(data);
         }
         else{
-          extend(true, item, data);
+          new mergeAndDiff(item, data);
         }
         return item;
       }
@@ -301,7 +305,20 @@ class Collection extends Model{
     });
   };
 
+  onChildEvent(eventName, callback){
+    this._childEvents.push({
+      eventName : eventName,
+      callback  : callback
+    });
+  };
 
+  addChildListeners(obj){
+    if(this._childEvents){
+      this._childEvents.forEach(event => {
+        this.listenTo(obj, event.eventName, event.callback.bind(this, obj));
+      });
+    }
+  };
 
 
 

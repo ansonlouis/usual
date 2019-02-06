@@ -52,7 +52,12 @@ describe('Base Model', function(){
         newProp : "myNewProp"
       };
 
-      myBase.events.on('update', function(){
+      myBase.events.on('update', function(newData, diff){
+        assert.deepEqual(update, newData);
+        assert.deepEqual(diff, {
+          myProp : "modMyProp",
+          newProp : "myNewProp"
+        });
         done();
       });
       myBase.update(update);

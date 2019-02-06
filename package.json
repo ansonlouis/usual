@@ -1,18 +1,17 @@
 {
   "name": "usual",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Very usual base model and collection for javascript",
   "author": "Anson Airoldi <ansonairoldi@gmail.com>",
   "homepage": "https://github.com/ansonlouis/usual",
   "repository": "github:ansonlouis/usual",
   "main": "package/index.js",
   "scripts": {
-    "start:dev": "webpack-dev-server --inline --open"
+    "test": "webpack-dev-server --inline --open"
   },
   "license": "MIT",
   "dependencies": {
-    "eventemitter2": "^5.0.1",
-    "extend": "^3.0.2"
+    "eventemitter2": "^5.0.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",

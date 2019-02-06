@@ -1,7 +1,7 @@
 // base-class.js
 
 const utils = require('./utils');
-const extend = require('extend');
+const mergeAndDiff = require('./merge-and-diff');
 const EventEmitter2 = require('eventemitter2');
 
 class Model{
@@ -41,7 +41,7 @@ class Model{
     }
 
     // dont allow overriding of event emitter (just yet)
-    this._events = new EventEmitter2(extend(true, {}, this.usual.eventConfig));
+    this._events = new EventEmitter2(new mergeAndDiff({}, this.usual.eventConfig).target);
 
     // holds any foreign models that we are listening upon so we can keep track if
     // us/them gets destroyed, listening events are removed as well
@@ -108,7 +108,7 @@ class Model{
    * modelAttr object into the model itself.
    */
   _merge(modelAttrs){
-    extend(true, this, modelAttrs);
+    return new mergeAndDiff(this, modelAttrs);
   };
 
   /**
@@ -122,8 +122,8 @@ class Model{
       delete data['id'];
       delete data['usual'];
     }
-    this._merge(data);
-    this.events.emit('update', data);
+    let mergeData = this._merge(data);
+    this.events.emit('update', data, mergeData.diff);
   };
 
   /**
@@ -169,7 +169,7 @@ class Model{
     var obj = utils.omit(this, function(value, key){
       return key[0] === '_' || key === "usual";
     });
-    return extend(true, {}, obj);
+    return new mergeAndDiff({}, obj).target;
   };
 
   static isInstance(model){
