@@ -33,7 +33,7 @@ class Collection extends Model{
     this.onChildEvent('destroy', (obj) => {
       this.remove(obj);
     });
-    
+
     this.onChildEvent('update', (obj, changes) => {
       this.events.emit('modelUpdate', obj, changes);
     });
@@ -187,10 +187,30 @@ class Collection extends Model{
       }
 
       // if this cache should contain a specific model, lets create a new one
-      if(this.model){
+       if(this.model){
         if(!Model.isInstance(obj)){
           obj._collection = this;
-          obj = new this.model(obj);
+
+          // if the model prop is a "usual" class,
+          // we'll create the instance immediately
+          if(this.model.isUsual){
+            obj = new this.model(obj);
+          }
+          // otherwise, we'll just call the passed in function, which
+          // could have forking logic to return different types of models
+          //
+          // ...this means you CANNOT use a lonely, regular class as a property
+          // for "model", it must be a usual class...if you do want to use non-usual
+          // classes for your models, use a function that returns the instance as
+          // the "model" property...realize that many features, such as events, wont
+          // occur if you mix non-usual models with collections
+          //
+          // However, you can use the function technique to create a factory that returns
+          // different usual models based on some condition!
+          else{
+            obj = this.model(obj);
+          }
+
         }
       }
 

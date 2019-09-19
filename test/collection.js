@@ -20,6 +20,12 @@ class ChildCollection extends Collection{
   };
 };
 
+class NonUsualModel{
+  constructor(){
+    this.iAmNotUsual = true;
+  };
+};
+
 
 var myId = "my-collection";
 var myProp = "my-prop";
@@ -121,6 +127,22 @@ describe('Base Collection', function(){
 
       assert.equal(model2 instanceof Model, true);
       assert.equal(model2 instanceof ChildModel, true);
+
+    });
+
+    it('can have a function that returns a class as the `model` property', function(){
+      let col = new Collection(null, {
+        model : function(obj){
+          return new NonUsualModel(obj);
+        }
+      });
+
+      col.add(new NonUsualModel());
+
+      let model = col.first();
+
+      assert.equal(model instanceof Model, false);
+      assert.equal(model instanceof NonUsualModel, true);
 
     });
 

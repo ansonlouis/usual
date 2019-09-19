@@ -179,4 +179,8 @@ class Model{
 
 };
 
+
+Model.isUsual = true;
+
+
 module.exports = Model;
